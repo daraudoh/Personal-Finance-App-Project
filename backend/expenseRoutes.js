@@ -49,9 +49,15 @@ router.put('/id', auth, (req, res) => {
 //Delete expense
 router.delete('/id', auth, (req, res) => {
     db.run(
-        `DELETE FROM expenses WHERE id =? AND user_id = ?
-        `
-    )
-})
+        `DELETE FROM expenses WHERE id = ? AND user_id = ?`,
+        [req.params.id, req.user.id],
+        function (err) {
+            if(err) return res.status(500).json({message: 'Error deleting expense'});
+            res.json({message: 'Deleted'});
+        }
+
+    );
+});
         
+module.exports = router;
 

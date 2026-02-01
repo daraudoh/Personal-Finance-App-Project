@@ -16,4 +16,7 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 const db = require('./db')
 
 const authRoutes = require('./authRoutes');
-app.use('/auth', authenticate);
+app.use('/auth', authRoutes);
+
+const expenseRoute = require('./expenseRoutes');
+app.use('/expenses', expenseRoute);
