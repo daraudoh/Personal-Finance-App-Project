@@ -9,15 +9,24 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 //Register
 router.post('/register', (req,res) => {
     const { name, email, password} = req.body;
+    console.log("Register route hit:", req.body)
+    console.log("DB file path:", db.filename);
+
     if (!email || !password) return res.status(400).json({message: 'Email and password required'});
 
     const password_hash = bcrypt.hashSync(password, 10);
 
     const stmt = `INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)`;
     db.run(stmt, [name, email, password_hash], function (err) {
-        if(err) return res.status(400).json({message: 'Email already in use'});
+        if (err) {
+            console.log("Registration error", err)
+            return res.status(400).json({message: 'Registration failed'});
+        }
+
+        console.log("User inserted with ID", this.lastID);
         res.json({id: this.lastID, name, email});
 
+        
     });
 
 });

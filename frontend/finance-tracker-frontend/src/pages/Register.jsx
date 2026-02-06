@@ -1,27 +1,66 @@
-import { useState } from "react";
+import { useState } from 'react';
 import API from '../api';
 import { useNavigate } from 'react-router-dom';
 
 export default function Register() {
-  const [from, setForm] = useState({ name: '', email:'', password: ''});
+  // This creates the "form" state variable
+  // If this line is missing, you get "form is not defined"
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+
   const navigate = useNavigate();
 
-  const handleChange = e => setForm({...form, [e.target.name]: e.target.value});
+  // Runs when the user types in any input
+  const handleChange = (e) => {
+    // "form" MUST exist for this to work
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  const handleSubmit = async e => {
+  // Runs when the user clicks Register
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    await API.post('/auth/register', form);
-    navigate('/login');
+    console.log("Submit clicked");
 
+    try {
+      await API.post('/auth/register', form);
+      navigate('/login');
+    } catch (err) {
+      console.log("Registration failed:", err);
+    }
   };
 
   return (
-    <form onSubmit = {handleSubmit}>
-      <input name="name" placeholder="Name" onChange={handleChange} />
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input name="password" type="password" placeholder="Password" onChange={handleChange} />
-      <button type= "submit">Register</button>
+    <form onSubmit={handleSubmit}>
+      <input
+        name="name"
+        placeholder="Name"
+        value={form.name}
+        onChange={handleChange}
+      />
+
+      <input
+        name="email"
+        placeholder="Email"
+        value={form.email}
+        onChange={handleChange}
+      />
+
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        value={form.password}
+        onChange={handleChange}
+      />
+
+      <button type="submit">Register</button>
     </form>
   );
-  
 }
+

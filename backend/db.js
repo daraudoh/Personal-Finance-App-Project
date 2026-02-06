@@ -1,3 +1,4 @@
+console.log("Using database file:", __dirname + "/finance.db");
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./finance.db');
 
