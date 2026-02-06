@@ -1,4 +1,4 @@
-import { useState } from 'react'
+/*import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -32,4 +32,23 @@ function App() {
   )
 }
 
-export default App
+export default App*/
+
+
+import { Link, Outlet } from 'react-router-dom';
+
+export default function App() {
+  return (
+    <div>
+      <nav style={{ display: 'flex', gap: '1rem' }}>
+        <Link to="/login">Login</Link>
+        <Link to="/register">Register</Link>
+        <Link to="/dashboard">Dashboard</Link>
+        <Link to="/expenses">Expenses</Link>
+      </nav>
+
+      <h1>Finance Tracker</h1>
+      <Outlet/>
+    </div>
+  );
+}
