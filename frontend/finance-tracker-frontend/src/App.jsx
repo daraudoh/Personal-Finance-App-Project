@@ -45,6 +45,13 @@ export default function App() {
         <Link to="/register">Register</Link>
         <Link to="/dashboard">Dashboard</Link>
         <Link to="/expenses">Expenses</Link>
+
+        <button onClick={() => {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }}>
+        Logout
+        </button>
       </nav>
 
       <h1>Finance Tracker</h1>
