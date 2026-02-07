@@ -1,4 +1,4 @@
-router.get('/summary/month/:month', auth, (req, res) => {
+/*router.get('/summary/month/:month', auth, (req, res) => {
     const month = req.params.month; //format: '2026-02'
     const likePattern = `${month}%`;
 
@@ -27,4 +27,44 @@ router.get('/summary/month/:month', auth, (req, res) => {
             });
         });
     });
+});*/
+
+router.get('/dashboard', (req, res) => {
+    const userId = req.user.id;
+
+    const summary = {};
+    
+    db.get(
+        'SELECT SUM(amount) AS total FROM expenses WHERE user_id =?',
+        [userId],
+        (err, row) => {
+            summary.total = row?.total || 0;
+
+            db.all(
+                `SELECT category, SUM(amount) AS total
+                FROM expenses
+                WHERE user_id = ?
+                GROUP BY category`,
+
+                [userId],
+                (err, rows) => {
+                    summary.byCategory = rows || [];
+
+                    db.all(
+                        `SELECT * FROM expenses
+                        WHERE user_id = ?
+                        ORDER BY date DESC
+                        LIMIT 5`
+                        [userId],
+                        (err, recent) => {
+                            summary.recent = recent || [];
+                            res.json(summary);
+                        }
+                    );
+                }
+                
+            );
+        }
+
+    );
 });

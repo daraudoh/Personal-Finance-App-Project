@@ -33,4 +33,47 @@ export default function Dashboard() {
     </div>
   
   );
-}
+}/*
+ export default function Dashboard() {
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      const res = await API.get(`/auth/dashboard`);
+      setSummary(res.data);
+    }
+    fetchData();
+  }, []);
+
+  if (!summary) return <p>Loading...</p>;
+
+  return (
+    <div>
+      <h2>Dashboard</h2>
+
+      <h3>Total Spent: ${summary.total.toFixed(2)}</h3>
+
+      <h3>By Category</h3>
+      <ul>
+        {summary.byCategory.map((cat) => (
+          <li key={cat.category} >
+            {cat.category}: ${cat.total.toFixed(2)}
+          </li>
+        )
+        
+        )}
+      </ul>
+
+      <h3>Recent Expenses</h3>
+      <ul>
+        {summary.recent.map((exp) => (
+          <li key={exp.id}>
+            {exp.date} - {exp.category}: ${exp.amount}
+          </li>
+        )
+      )}
+      </ul>
+    </div>
+  );
+ }
+*/
