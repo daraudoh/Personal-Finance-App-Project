@@ -4,60 +4,126 @@ const auth = require('./authMiddleware');
 
 const router = express.Router();
 
-// Get all expenses for user
+// ------------------------------
+// GET ALL EXPENSES
+// ------------------------------
 router.get('/', auth, (req, res) => {
-    db.all(
-        'SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC',
-        [req.user.id],
+  const userId = req.user.id;
+
+  db.all(
+    `SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC`,
+    [userId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: 'Error fetching expenses' });
+      res.json(rows);
+    }
+  );
+});
+
+// ------------------------------
+// MONTHLY SUMMARY
+// ------------------------------
+router.get('/summary/month/:month', auth, (req, res) => {
+  const userId = req.user.id;
+  const month = req.params.month;
+
+  db.get(
+    `
+    SELECT SUM(amount) AS total
+    FROM expenses
+    WHERE user_id = ?
+      AND strftime('%Y-%m', date) = ?
+    `,
+    [userId, month],
+    (err, row) => {
+      if (err) return res.status(500).json({ message: 'Error fetching total' });
+
+      const total = row?.total || 0;
+
+      db.all(
+        `
+        SELECT category, SUM(amount) AS total
+        FROM expenses
+        WHERE user_id = ?
+          AND strftime('%Y-%m', date) = ?
+        GROUP BY category
+        `,
+        [userId, month],
         (err, rows) => {
-            if (err) return res.status(500).json({ message: 'Error fetching expenses'});
-            res.json(rows);
+          if (err) return res.status(500).json({ message: 'Error fetching categories' });
+
+          res.json({
+            total,
+            byCategory: rows || []
+          });
         }
-    );
+      );
+    }
+  );
 });
 
-//Create expense
+// ------------------------------
+// CREATE EXPENSE
+// ------------------------------
 router.post('/', auth, (req, res) => {
-    const {amount, category, date, note} = req.body;
-    const stmt = `
-        INSERT INTO expenses (user_id, amount, category, date, note)
-        VALUES (?, ?, ?, ?, ?)
-    `;
+  const { amount, category, date, note } = req.body;
 
-    db.run(stmt, [req.user.id, amount, category, date, note], function(err) {
-        if(err) return res.status(500).json({ message:'Error creating expense'});
-        res.json({id:this.lastID, user_id:req.user.id, amount, category, date, note});
+  const stmt = `
+    INSERT INTO expenses (user_id, amount, category, date, note)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  db.run(stmt, [req.user.id, amount, category, date, note], function (err) {
+    if (err) return res.status(500).json({ message: 'Error creating expense' });
+
+    res.json({
+      id: this.lastID,
+      user_id: req.user.id,
+      amount,
+      category,
+      date,
+      note
     });
-
+  });
 });
 
-//Update expense
-router.put('/id', auth, (req, res) => {
-    const {amount, category, date, note} =req.body;
-    const stmt = `
-        UPDATE expenses
-        SET amount = ?. category = ?, date =? , note = ?
-        WHERE id = ? AND user_id = ?
-    `;
-    db.run(stmt, [amount, category, date, note, req.params.id, req.user.id], function (err) {
-        if(err) return res.status(500).json({ message: `Error updating expense`});
-        res.json({message: 'Updated'});
+// ------------------------------
+// UPDATE EXPENSE
+// ------------------------------
+router.put('/:id', auth, (req, res) => {
+  const { amount, category, date, note } = req.body;
+  const userId = req.user.id;
+  const expenseId = req.params.id;
 
+  const stmt = `
+    UPDATE expenses
+    SET amount = ?, category = ?, date = ?, note = ?
+    WHERE id = ? AND user_id = ?
+  `;
+
+  db.run(stmt, [amount, category, date, note, expenseId, userId], function (err) {
+    if (err) return res.status(500).json({ message: 'Error updating expense' });
+
+    res.json({ updated: this.changes });
+  });
 });
-     });
 
-//Delete expense
-router.delete('/id', auth, (req, res) => {
-    db.run(
-        `DELETE FROM expenses WHERE id = ? AND user_id = ?`,
-        [req.params.id, req.user.id],
-        function (err) {
-            if(err) return res.status(500).json({message: 'Error deleting expense'});
-            res.json({message: 'Deleted'});
-        }
+// ------------------------------
+// DELETE EXPENSE
+// ------------------------------
+router.delete('/:id', auth, (req, res) => {
+  const userId = req.user.id;
+  const expenseId = req.params.id;
 
-    );
+  db.run(
+    `DELETE FROM expenses WHERE id = ? AND user_id = ?`,
+    [expenseId, userId],
+    function (err) {
+      if (err) return res.status(500).json({ message: 'Error deleting expense' });
+
+      res.json({ deleted: this.changes });
+    }
+  );
 });
-        
+
 module.exports = router;
-

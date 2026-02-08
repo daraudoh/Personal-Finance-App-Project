@@ -1,54 +1,201 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import API from '../api';
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState([]);
-  const [form, setForm] = useState({ amount: '', category: '', date: '', note: ''});
+  const [editing, setEditing] = useState(null);
 
-  const loadExpenses = async () => {
-    const res = await API.get('/expenses');
-    setExpenses(res.data);
-  };
+  const [newExpense, setNewExpense] = useState({
+    amount: '',
+    category: '',
+    date: '',
+    note: ''
+  });
 
+  // Load all expenses on mount
   useEffect(() => {
-    loadExpenses(); 
+    loadExpenses();
   }, []);
 
-  const handleChange = e => setForm({...form, [e.target.name]: e.target.value});
+  async function loadExpenses() {
+    try {
+      const res = await API.get('/api/expenses');
+      setExpenses(res.data);
+    } catch (err) {
+      console.log("Error loading expenses:", err);
+    }
+  }
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    await API.post('/expenses', form);
-    setForm({ amount: '', category: '', date: '', note: ''});
-    loadExpenses();
-  };
+  // Add new expense
+  async function addExpense() {
+    try {
+      await API.post('/api/expenses', newExpense);
 
-  const handleDelete = async (id) => {
-    await API.delete('/expenses/${id}');
-    loadExpenses();
-  };
+      // Clear form
+      setNewExpense({
+        amount: '',
+        category: '',
+        date: '',
+        note: ''
+      });
 
-  return(
+      loadExpenses();
+    } catch (err) {
+      console.log("Error adding expense:", err);
+    }
+  }
+
+  // Delete an expense
+  async function deleteExpense(id) {
+    try {
+      await API.delete(`/api/expenses/${id}`);
+      loadExpenses();
+    } catch (err) {
+      console.log("Error deleting:", err);
+    }
+  }
+
+  // Save edited expense
+  async function saveEdit() {
+    try {
+      await API.put(`/api/expenses/${editing.id}`, editing);
+      setEditing(null);
+      loadExpenses();
+    } catch (err) {
+      console.log("Error updating:", err);
+    }
+  }
+
+  return (
     <div>
       <h2>Expenses</h2>
-      <form onSubmit={handleSubmit}>
-        <input name ="amount" placeholder="Amount" value={form.amount} onChange={handleChange} />
-        <input name="category" placeholder="Category" value={form.category} onChange={handleChange} />
-        <input name="date" type="date" value={form.date} onChange={handleChange} />
-        <input name="note" placeholder="Note" value={form.note} onChange={handleChange} />
-        <button type="submit">Add</button>
-      </form>
 
-      <ul>
-        {expenses.map(e => (
-          <li key={e.id}>
-            {e.date} - {e.category} - ${e.amount} - {e.note}
-            <button onClick={() => handleDelete(e.id)}>Delete</button>
+      {/* Add Expense Form */}
+      <div
+        style={{
+          marginBottom: '2rem',
+          padding: '1rem',
+          border: '2px solid #28a745',
+          borderRadius: '6px'
+        }}
+      >
+        <h3>Add Expense</h3>
 
-            
-          </li>
-        ))}
-      </ul>
+        <input
+          type="number"
+          placeholder="Amount"
+          value={newExpense.amount}
+          onChange={e => setNewExpense({ ...newExpense, amount: e.target.value })}
+        />
+        <br />
+
+        <input
+          type="text"
+          placeholder="Category"
+          value={newExpense.category}
+          onChange={e => setNewExpense({ ...newExpense, category: e.target.value })}
+        />
+        <br />
+
+        <input
+          type="date"
+          value={newExpense.date}
+          onChange={e => setNewExpense({ ...newExpense, date: e.target.value })}
+        />
+        <br />
+
+        <input
+          type="text"
+          placeholder="Note"
+          value={newExpense.note}
+          onChange={e => setNewExpense({ ...newExpense, note: e.target.value })}
+        />
+        <br />
+
+        <button onClick={addExpense}>Add Expense</button>
+      </div>
+
+      {/* List of expenses */}
+      {expenses.length === 0 && <p>No expenses yet.</p>}
+
+      {expenses.map(exp => (
+        <div
+          key={exp.id}
+          style={{
+            border: '1px solid #ccc',
+            padding: '1rem',
+            marginBottom: '1rem',
+            borderRadius: '6px'
+          }}
+        >
+          <strong>${exp.amount}</strong> — {exp.category} — {exp.date}
+          <br />
+          <small>{exp.note}</small>
+
+          <div style={{ marginTop: '0.5rem' }}>
+            <button onClick={() => setEditing(exp)}>Edit</button>
+            <button
+              onClick={() => deleteExpense(exp.id)}
+              style={{ marginLeft: '0.5rem', color: 'red' }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
+
+      {/* Edit form */}
+      {editing && (
+        <div
+          style={{
+            marginTop: '2rem',
+            padding: '1rem',
+            border: '2px solid #007bff',
+            borderRadius: '6px'
+          }}
+        >
+          <h3>Edit Expense</h3>
+
+          <input
+            type="number"
+            placeholder="Amount"
+            value={editing.amount}
+            onChange={e => setEditing({ ...editing, amount: e.target.value })}
+          />
+          <br />
+
+          <input
+            type="text"
+            placeholder="Category"
+            value={editing.category}
+            onChange={e => setEditing({ ...editing, category: e.target.value })}
+          />
+          <br />
+
+          <input
+            type="date"
+            value={editing.date}
+            onChange={e => setEditing({ ...editing, date: e.target.value })}
+          />
+          <br />
+
+          <input
+            type="text"
+            placeholder="Note"
+            value={editing.note}
+            onChange={e => setEditing({ ...editing, note: e.target.value })}
+          />
+          <br />
+
+          <button onClick={saveEdit}>Save</button>
+          <button
+            onClick={() => setEditing(null)}
+            style={{ marginLeft: '0.5rem' }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 }
