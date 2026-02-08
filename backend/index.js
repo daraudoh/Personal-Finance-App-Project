@@ -19,7 +19,7 @@ const authRoutes = require('./authRoutes');
 app.use('/auth', authRoutes);
 
 const expenseRoute = require('./expenseRoutes');
-app.use('/expenses', expenseRoute);
+app.use('/api/expenses', expenseRoute);
 
 app.get('/test-users', (req, res) => {
   db.all("SELECT * FROM users", [], (err, rows) => {

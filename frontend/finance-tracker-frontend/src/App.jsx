@@ -41,17 +41,26 @@ export default function App() {
   return (
     <div>
       <nav style={{ display: 'flex', gap: '1rem' }}>
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
-        <Link to="/dashboard">Dashboard</Link>
-        <Link to="/expenses">Expenses</Link>
+        {!localStorage.getItem('token') && (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+          </>
+        )}
 
-        <button onClick={() => {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
+        {localStorage.getItem('token') && (
+          <>
+            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/expenses">Expenses</Link>
+
+            <button onClick={() => {
+              localStorage.removeItem('token');
+              window.location.href = '/login';
         }}>
-        Logout
-        </button>
+          Logout
+        </button> 
+          </>
+        )}
       </nav>
 
       <h1>Finance Tracker</h1>

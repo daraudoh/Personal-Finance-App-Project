@@ -6,7 +6,7 @@ export default function Dashboard() {
   const [month, setMonth] = useState('2026-02'); //default
 
   const loadSummary = async() => {
-    const res = await API.get('/expenses/summary/month/${month}');
+    const res = await API.get(`/api/expenses/summary/month/${month}`);
     setSummary(res.data);
   }
 
@@ -75,5 +75,4 @@ export default function Dashboard() {
       </ul>
     </div>
   );
- }
-*/
+ }*/
